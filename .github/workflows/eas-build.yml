@@ -2,13 +2,13 @@ name: EAS Build and Update
 on:
   push:
     branches:
-      - main
-      - develop
+      - master
+      - development
   pull_request:
     types: [opened, synchronize]
     branches:
-      - main
-      - develop
+      - master
+      - development
 
 jobs:
   build-and-update:
