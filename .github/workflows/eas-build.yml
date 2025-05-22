@@ -1,0 +1,65 @@
+name: EAS Build and Update
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-update:
+    name: Deploy to EAS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set environment variables for main branch
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "DEPLOY_ENV=production" >> $GITHUB_ENV
+
+      - name: Set environment variables for develop branch
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          echo "DEPLOY_ENV=preview" >> $GITHUB_ENV
+
+      - name: Set environment variables for other branches
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop'
+        run: |
+          echo "DEPLOY_ENV=development" >> $GITHUB_ENV
+
+      # For pull requests, we only check if build would succeed but don't deploy
+      - name: Validate build
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Validating build for $DEPLOY_ENV environment"
+          eas update:configure
+          npx expo-doctor
+          npx expo prebuild --clean
+
+      # For pushes to main or develop, we deploy an update
+      - name: Deploy update to Expo
+        if: github.event_name == 'push'
+        run: |
+          echo "Deploying update to $DEPLOY_ENV channel"
+          eas update --auto --branch $DEPLOY_ENV

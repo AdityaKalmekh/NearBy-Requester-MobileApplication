@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#000000" />
+  
+  <!-- Logo Text -->
+  <g transform="translate(512, 512)">
+    <!-- NearBy Text -->
+    <text x="0" y="0" font-family="Arial, Helvetica, sans-serif" font-size="120" font-weight="700" text-anchor="middle" fill="#FFFFFF">NearBy</text>
+    
+    <!-- Subtle Location Pin Integrated with Text -->
+    <path d="M-380 -20 C-380 -60 -350 -90 -310 -90 C-270 -90 -240 -60 -240 -20 C-240 40 -310 90 -310 90 C-310 90 -380 40 -380 -20 Z" fill="#FFFFFF" opacity="0.2" />
+  </g>
+  
+  <!-- Loading Dots Animation -->
+  <g transform="translate(512, 600)">
+    <circle cx="-40" cy="0" r="10" fill="#FFFFFF">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite" begin="0s" />
+    </circle>
+    <circle cx="0" cy="0" r="10" fill="#FFFFFF">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite" begin="0.5s" />
+    </circle>
+    <circle cx="40" cy="0" r="10" fill="#FFFFFF">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite" begin="1s" />
+    </circle>
+  </g>
+</svg>
