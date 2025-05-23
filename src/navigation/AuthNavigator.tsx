@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 // Import screens
 // These will be implemented later, but we'll define the structure now
 // import LoginScreen from '../screens/auth/LoginScreen';
-import LoginScreen from '../components/auth/LoginScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
 import OTPScreen from '../screens/auth/OTPScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 

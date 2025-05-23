@@ -65,3 +65,9 @@ dist/
 # local env files
 .env*.local
 .env
+.env.staging
+.env.production
+.env.development
+
+# Line counter
+.VSCodeCounter
