@@ -4,23 +4,12 @@
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
-    "start:dev": "EXPO_PUBLIC_ENV=development expo start",
-    "start:prod": "EXPO_PUBLIC_ENV=production expo start",
+    "start:dev": "copy .env.development .env && expo start --clear",
+    "start:preview": "copy .env.staging .env && expo start --clear",
+    "start:prod": "copy .env.production .env && expo start --clear",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "build:development": "eas build --profile development --platform android",
-    "build:preview": "eas build --profile preview --platform android",
-    "build:production": "eas build --profile production --platform android",
-    "build:all-dev": "eas build --profile development --platform all",
-    "build:all-preview": "eas build --profile preview --platform all",
-    "build:all-production": "eas build --profile production --platform all",
-    "update:development": "eas update --branch development",
-    "update:preview": "eas update --branch preview",
-    "update:production": "eas update --branch production",
-    "update:auto-dev": "eas update --auto --branch development",
-    "update:auto-preview": "eas update --auto --branch preview",
-    "update:auto-prod": "eas update --auto --branch production"
+    "web": "expo start --web"
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.3",
@@ -48,6 +37,8 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "cross-env": "^7.0.3",
     "typescript": "~5.8.3"
   },
   "private": true

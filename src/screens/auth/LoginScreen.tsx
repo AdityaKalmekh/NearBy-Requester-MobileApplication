@@ -20,6 +20,7 @@ import { RootStackScreenProps } from '../../navigation/types';
 import PhoneInput from '../../components/auth/PhoneInput';
 import Button from '../../components/common/Button';
 import useHttp from '../../hooks/useHttp';
+import Loading from '../../components/common/Loading';
 
 type LoginScreenProps = RootStackScreenProps<'Auth'>;
 type OTPResponse = {
@@ -42,8 +43,6 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleNext = async () => {
-    console.log("Handle Next is called");
-    
     // Basic validation
     if (phoneNumber.length < 10) {
       // You can add a proper validation message here
@@ -63,21 +62,6 @@ const LoginScreen: React.FC = () => {
         }
       };
 
-      // console.log(`Server URL -> ${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}${requestConfig.url}`);
-      
-      // const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}${requestConfig.url}`, {
-      //   method: 'POST',
-      //   credentials: 'include',
-      //   headers: {
-      //     'Accept': 'application/json',
-      //     'Content-Type': 'application/json',
-      //     'Origin': 'http://localhost:19000',
-      //     'Access-Control-Request-Method': 'POST',
-      //     'Access-Control-Request-Headers': 'Content-Type,Accept'
-      //   },
-      //   body: JSON.stringify(requestConfig.data)
-      // })
-      // console.log('Response ---------> ', response);
       // Send the OTP request using the useHttp hook
       const responseData = await sendRequest(
         requestConfig,
@@ -128,6 +112,7 @@ const LoginScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => navigation.goBack()}
+              disabled={isLoading}
             >
               <Ionicons name="arrow-back" size={24} color="#000" />
             </TouchableOpacity>
@@ -147,6 +132,7 @@ const LoginScreen: React.FC = () => {
               onChangeText={setPhoneNumber}
               onClear={handleClearInput}
               autoFocus
+              editable={!isLoading}
             />
           </View>
 
@@ -159,6 +145,13 @@ const LoginScreen: React.FC = () => {
             />
           </View>
         </KeyboardAvoidingView>
+
+        <Loading
+          visible={isLoading}
+          backgroundColor="rgba(255, 255, 255, 0.75)"
+          dotColor="#000000"
+          size="small"
+        />
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
