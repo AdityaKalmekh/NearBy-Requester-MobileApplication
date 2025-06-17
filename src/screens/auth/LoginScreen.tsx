@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,11 +16,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { RootStackScreenProps } from '../../navigation/types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AuthStackParamList, RootStackScreenProps } from '../../navigation/types';
 import PhoneInput from '../../components/auth/PhoneInput';
 import Button from '../../components/common/Button';
-import useHttp from '../../hooks/useHttp';
 import Loading from '../../components/common/Loading';
+import useAuth from '../../hooks/useAuth';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 type LoginScreenProps = RootStackScreenProps<'Auth'>;
 type OTPResponse = {
@@ -29,14 +31,36 @@ type OTPResponse = {
   requestId?: string;
 };
 
+type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
+
 const LoginScreen: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const inputRef = useRef<TextInput>(null);
-  const navigation = useNavigation<LoginScreenProps['navigation']>();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
   const windowHeight = Dimensions.get('window').height;
+  const insets = useSafeAreaInsets();
 
-  const { sendRequest, error, clearError } = useHttp<OTPResponse>();
+  // Use auth context
+  const { authState, initiateOTP, clearError } = useAuth();
+
+  // Clear any existing errors when component mounts
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
+
+  // Auto-dismiss keyboard when 10 digits are entered
+  useEffect(() => {
+    if (phoneNumber.length === 10) {
+      // Add a small delay to ensure the last digit is properly entered
+      const timer = setTimeout(() => {
+        Keyboard.dismiss(); // Hide keyboard
+        inputRef.current?.blur(); // Remove focus (cursor disappears)
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [phoneNumber]);
+
   const handleClearInput = () => {
     setPhoneNumber('');
     inputRef.current?.focus();
@@ -50,54 +74,34 @@ const LoginScreen: React.FC = () => {
     }
 
     clearError();
-    setIsLoading(true);
     try {
-      const requestConfig = {
-        url: '/auth/initiate',
-        method: 'POST' as 'POST',
-        data: {
-          phoneNo: phoneNumber,
-          authType: 'PhoneNo',
-          role: 'requester'
-        }
-      };
-
-      // Send the OTP request using the useHttp hook
-      const responseData = await sendRequest(
-        requestConfig,
-        // Success callback
-        (data) => {
-          // You can perform additional actions with the data here if needed
-          console.log('OTP sent successfully', data);
-        },
-        // Error callback
-        (err) => {
-          console.error('Failed to send OTP:', err);
-          Alert.alert('Error', err.message || 'Failed to send OTP. Please try again.');
-        }
-      );
+      // Use the auth context to initiate OTP
+      const response = await initiateOTP({
+        phoneNo: phoneNumber,
+        authType: 'PhoneNo',
+        role: 'requester'
+      });
 
       // If we reached here, the request was successful
-      if (responseData && responseData.success) {
+      if (response && response.success) {
         // Navigate to OTP screen with phone number and requestId (if your API returns one)
+        console.log("Login OTP Response --------> ", response);
         navigation.navigate('OTP', {
-          phoneNumber,
-          requestId: responseData.requestId
+          phoneNo: phoneNumber,
+          requesterId: response.user.userId,
+          isNewUser: response.user.isNewUser
         });
       } else {
         // Handle case where API returned success: false
-        Alert.alert('Error', responseData?.message || 'Failed to send OTP. Please try again.');
+        Alert.alert('Error', response?.message || 'Failed to send OTP. Please try again.');
       }
     } catch (error) {
-      // This will catch any errors not handled by the error callback
-      console.error('Unexpected error:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-
-    // Navigate to OTP screen with phone number
-    // navigation.navigate('OTP', { phoneNumber });
+      // Error handling is managed by the auth context
+      console.error('Failed to send OTP:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send OTP. Please try again.';
+      Alert.alert('Error', errorMessage);      
+    } 
   };
 
   return (
@@ -108,17 +112,13 @@ const LoginScreen: React.FC = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoidView}
         >
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              disabled={isLoading}
-            >
-              <Ionicons name="arrow-back" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={[styles.contentContainer, { minHeight: windowHeight * 0.7 }]}>
+          <View style={[
+            styles.contentContainer, 
+            { 
+              minHeight: windowHeight * 0.7,
+              paddingBottom: phoneNumber.length === 10 ? 120 : 40 // More space when button is visible
+            }
+          ]}>
             <View style={styles.titleContainer}>
               <Text style={styles.title}>Enter Phone number for verification</Text>
               <Text style={styles.subtitle}>
@@ -132,22 +132,29 @@ const LoginScreen: React.FC = () => {
               onChangeText={setPhoneNumber}
               onClear={handleClearInput}
               autoFocus
-              editable={!isLoading}
             />
+
+            {authState.error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{authState.error}</Text>
+              </View>
+            )}
           </View>
 
-          <View style={styles.buttonContainer}>
-            <Button
-              title="Next"
-              onPress={handleNext}
-              disabled={phoneNumber.length < 10}
-              style={styles.nextButton}
-            />
-          </View>
+          {/* Next Button - Only visible when 10 digits are entered */}
+          {phoneNumber.length === 10 && (
+            <View style={styles.buttonContainer}>
+              <Button
+                title="Next"
+                onPress={handleNext}
+                style={styles.nextButton}
+              />
+            </View>
+          )}
         </KeyboardAvoidingView>
 
         <Loading
-          visible={isLoading}
+          visible={authState.isLoading}
           backgroundColor="rgba(255, 255, 255, 0.75)"
           dotColor="#000000"
           size="small"
@@ -165,19 +172,11 @@ const styles = StyleSheet.create({
   keyboardAvoidView: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    height: 56,
-    justifyContent: 'center',
-  },
-  backButton: {
-    padding: 8,
-  },
   contentContainer: {
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: 'flex-start',
+    paddingTop: 40,
   },
   titleContainer: {
     marginTop: 24,
@@ -195,12 +194,31 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   buttonContainer: {
-    padding: 24,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 20, // Fixed bottom padding for consistent spacing across all devices
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
   },
   nextButton: {
-    borderRadius: 8, // Slightly more rounded corners
+    borderRadius: 8,
   },
+  errorContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#ffebee',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#f44336',
+  },
+  errorText: {
+    color: '#c62828',
+    fontSize: 14,
+    fontWeight: '500',
+  }
 });
 
 export default LoginScreen;
