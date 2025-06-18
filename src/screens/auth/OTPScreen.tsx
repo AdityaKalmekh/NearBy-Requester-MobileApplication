@@ -8,7 +8,8 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 
@@ -17,17 +18,26 @@ import OTPInput from '../../components/auth/OTPInput';
 
 // Import types
 import { AuthStackParamList } from '../../navigation/types';
+import useAuth from '../../hooks/useAuth';
 
 type OTPScreenRouteProp = RouteProp<AuthStackParamList, 'OTP'>;
 
 const OTPScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<OTPScreenRouteProp>();
-  const { phoneNumber } = route.params;
-  
+  const { phoneNo, requesterId, isNewUser } = route.params;
+
   const [otp, setOtp] = useState<string[]>(['', '', '', '']);
   const [timer, setTimer] = useState<number>(120); // 2 minutes in seconds
   const [isButtonActive, setIsButtonActive] = useState<boolean>(false);
+  const [isResendAvailable, setIsResendAvailable] = useState<boolean>(false);
+
+  // Use auth context
+  const { authState, verifyOTP, initiateOTP, clearError } = useAuth();
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   useEffect(() => {
     // Start countdown timer
@@ -56,14 +66,36 @@ const OTPScreen: React.FC = () => {
     return `${mins}:${secs}`;
   };
 
-  const handleLogin = () => {
-    // Process OTP verification
+  const handleLogin = async() => {
     const otpValue = otp.join('');
     console.log('Verifying OTP:', otpValue);
     
-    // This would typically involve an API call to verify the OTP
-    // For now, we'll just navigate to the main app
-    // navigation.navigate('Main');
+    // Clear any existing errors
+    clearError();
+
+    try {
+      // Use the auth context to verify OTP
+      const success = await verifyOTP({
+        phoneNo,
+        otp: otpValue,
+        requestId: requesterId,
+        isNewUser
+      });
+
+      if (success) {
+        console.log('Login successful');
+        // Navigation will be handled automatically by AppNavigator 
+        // when authState.isAuthenticated becomes true
+      }
+    } catch (error) {
+      console.error('Failed to verify OTP:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Invalid OTP. Please try again.';
+      Alert.alert('Verification Failed', errorMessage);
+      
+      // Clear OTP fields to allow retry
+      setOtp(['', '', '', '']);
+    }
   };
 
   const handleResendOtp = () => {
@@ -71,9 +103,9 @@ const OTPScreen: React.FC = () => {
     setOtp(['', '', '', '']);
     // Reset timer
     setTimer(120);
-    
+
     // API call to resend OTP would go here
-    console.log('Resending OTP to:', phoneNumber);
+    console.log('Resending OTP to:', phoneNo);
   };
 
   return (
@@ -86,21 +118,21 @@ const OTPScreen: React.FC = () => {
         <View style={styles.contentContainer}>
           <View style={styles.verificationContainer}>
             <Text style={styles.title}>Verification Code</Text>
-            
+
             <Text style={styles.subtitle}>
               Please enter the 4-digit code sent on
             </Text>
-            <Text style={styles.phoneNumber}>{phoneNumber}</Text>
-            
-            <OTPInput 
-              code={otp} 
-              setCode={setOtp} 
-              maxLength={4} 
-              keyboardType="number-pad" 
+            <Text style={styles.phoneNumber}>{phoneNo}</Text>
+
+            <OTPInput
+              code={otp}
+              setCode={setOtp}
+              maxLength={4}
+              keyboardType="number-pad"
             />
-            
+
             <Text style={styles.timer}>{formatTime(timer)}</Text>
-            
+
             {timer === 0 && (
               <TouchableOpacity onPress={handleResendOtp}>
                 <Text style={styles.resendText}>Resend OTP</Text>
@@ -108,7 +140,7 @@ const OTPScreen: React.FC = () => {
             )}
           </View>
         </View>
-        
+
         <TouchableOpacity
           style={[
             styles.loginButton,
