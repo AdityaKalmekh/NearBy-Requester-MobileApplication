@@ -1,19 +1,25 @@
 {
   "expo": {
-    "name": "NearByRequester",
+    "name": "NearBy",
     "slug": "NearByRequester",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/uber-icon-1024.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "plugins": [
-      "expo-dev-client"
+      "expo-dev-client",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "This app needs access to location to help you find nearby service providers.",
+          "locationAlwaysPermission": "This app needs access to location to help you find nearby service providers.",
+          "locationWhenInUsePermission": "This app needs access to location to help you find nearby service providers.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ]
     ],
     "developmentClient": {
       "silentLaunch": false
@@ -27,18 +33,30 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.NearBy.nearbyrequester"
+      "bundleIdentifier": "com.nearby.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to location to help you find nearby service providers.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to location to help you find nearby service providers.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/uber-icon-1024.png",
+        "backgroundColor": "#000000"
       },
-      "package": "com.NearBy.nearbyrequester",
-      "edgeToEdgeEnabled": true
+      "package": "com.nearby.app",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "INTERNET",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/uber-favicon.png"
     },
     "extra": {
       "eas": {

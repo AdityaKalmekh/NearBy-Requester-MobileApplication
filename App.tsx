@@ -1,66 +1,80 @@
 import React, { useState, useEffect } from 'react';
-import { View, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-// import { Provider } from 'react-redux';
-// import { store } from './src/store';
+import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StyleSheet, View } from 'react-native';
+
+// Import the auth provider
+import { AuthProvider } from './src/contexts/AuthContext';
+import { useAuthStatus } from './src/hooks/useAuth';
+
+// Import navigation and splash screen
 import AppNavigator from './src/navigation/AppNavigator';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SplashStyle from './src/components/common/SplashStyle';
-import * as SplashScreen from 'expo-splash-screen';
-import Environment from './src/utils/environment';
-import 'react-native-gesture-handler';
+import Loading from './src/components/common/Loading';
 
-// Keep native splash screen visible until we're ready
-SplashScreen.preventAutoHideAsync();
-
-export default function App() {
-  const [isAppReady, setIsAppReady] = useState(false);
-  const [isSplashComplete, setIsSplashComplete] = useState(false);
-
-  if (__DEV__) { 
-    console.log('Environment:', Environment);
-  }
-  useEffect(() => {
-    async function prepare() {
-      try {
-        // Load any resources, check authentication state, pre-load data
-        await SplashScreen.hideAsync();
-      } catch (e) {
-        console.warn('Error during app initialization:', e);
-      } finally {
-        setIsAppReady(true);
-      }
-    }
-
-    prepare();
-  }, []);
-
-  const onSplashAnimationComplete = () => {
-    setIsSplashComplete(true);
+// Create a component that uses auth context inside the provider
+const AppContent: React.FC = () => {
+  const [splashComplete, setSplashComplete] = useState(false);
+  const { isInitializing } = useAuthStatus();
+  
+  const handleSplashComplete = () => {
+    console.log('Splash animation completed');
+    setSplashComplete(true);
   };
 
-  if (!isAppReady) {
-    return null;
-  }
+  const appReady = splashComplete && !isInitializing;
 
   return (
-    // <Provider store={store}>
-      <SafeAreaProvider>
-        <StatusBar 
-          barStyle="light-content" 
-          backgroundColor="#000000" 
-          translucent={false} 
-        />
-        <View style={{ flex: 1 }}>
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
-          
-          {!isSplashComplete && (
-            <SplashStyle onAnimationComplete={onSplashAnimationComplete} />
+    <>
+      <NavigationContainer>
+        {appReady && <AppNavigator />}
+        <StatusBar style="auto" />
+      </NavigationContainer>
+      
+      {/* Show splash screen until both splash and auth are ready */}
+      {!appReady && (
+        <>
+          <SplashStyle onAnimationComplete={handleSplashComplete} />
+          {/* Show subtle loading indicator if splash is done but auth is still loading */}
+          {splashComplete && isInitializing && (
+            <View style={styles.authLoadingContainer}>
+              <Loading 
+                visible={true} 
+                size="small"
+                backgroundColor="rgba(0, 0, 0, 0.3)"
+                dotColor="#ffffff"
+              />
+            </View>
           )}
-        </View>
-      </SafeAreaProvider>
-    // </Provider>
+        </>
+      )}
+    </>
+  );
+};
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  authLoadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+});

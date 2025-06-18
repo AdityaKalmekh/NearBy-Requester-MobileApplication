@@ -1,5 +1,5 @@
 {
-  "name": "nearbyrequester",
+  "name": "nearby",
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -19,24 +19,25 @@
     "axios": "^1.9.0",
     "expo": "~53.0.9",
     "expo-constants": "^17.1.6",
-    "expo-dev-client": "~5.1.8",
-    "expo-location": "^18.1.5",
-    "expo-secure-store": "^14.2.3",
+    "expo-dev-client": "~5.2.0",
+    "expo-location": "~18.1.5",
+    "expo-secure-store": "~14.2.3",
     "expo-splash-screen": "^0.30.8",
     "expo-status-bar": "~2.2.3",
     "expo-updates": "~0.28.13",
     "react": "19.0.0",
-    "react-native": "0.79.2",
+    "react-native": "0.79.3",
     "react-native-dotenv": "^3.4.11",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-maps": "1.20.1",
-    "react-native-safe-area-context": "^5.4.0",
+    "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "^4.10.0",
     "react-native-svg": "15.11.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
+    "@types/react-native": "^0.72.8",
     "babel-plugin-module-resolver": "^5.0.2",
     "cross-env": "^7.0.3",
     "typescript": "~5.8.3"
