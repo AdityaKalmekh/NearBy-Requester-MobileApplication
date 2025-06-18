@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   KeyboardAvoidingView,
@@ -14,22 +13,14 @@ import {
   StatusBar,
   Alert
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AuthStackParamList, RootStackScreenProps } from '../../navigation/types';
+import { AuthStackParamList } from '../../navigation/types';
 import PhoneInput from '../../components/auth/PhoneInput';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import useAuth from '../../hooks/useAuth';
 import { StackNavigationProp } from '@react-navigation/stack';
-
-type LoginScreenProps = RootStackScreenProps<'Auth'>;
-type OTPResponse = {
-  success: boolean;
-  message: string;
-  requestId?: string;
-};
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -85,7 +76,6 @@ const LoginScreen: React.FC = () => {
       // If we reached here, the request was successful
       if (response && response.success) {
         // Navigate to OTP screen with phone number and requestId (if your API returns one)
-        console.log("Login OTP Response --------> ", response);
         navigation.navigate('OTP', {
           phoneNo: phoneNumber,
           requesterId: response.user.userId,
