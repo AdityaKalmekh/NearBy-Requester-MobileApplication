@@ -15,13 +15,15 @@ interface OTPInputProps {
   setCode: React.Dispatch<React.SetStateAction<string[]>>;
   maxLength: number;
   keyboardType?: KeyboardType;
+  autoFocus?: boolean;
 }
 
 const OTPInput: React.FC<OTPInputProps> = ({
   code,
   setCode,
   maxLength,
-  keyboardType = 'number-pad'
+  keyboardType = 'number-pad',
+  autoFocus = true
 }) => {
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [focusedInput, setFocusedInput] = useState<number | null>(0);
