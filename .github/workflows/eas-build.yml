@@ -34,17 +34,17 @@ jobs:
         run: npm ci
 
       - name: Set environment variables for main branch
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
           echo "DEPLOY_ENV=production" >> $GITHUB_ENV
 
       - name: Set environment variables for develop branch
-        if: github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/development'
         run: |
           echo "DEPLOY_ENV=preview" >> $GITHUB_ENV
 
       - name: Set environment variables for other branches
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop'
+        if: github.ref != 'refs/heads/master' && github.ref != 'refs/heads/development'
         run: |
           echo "DEPLOY_ENV=development" >> $GITHUB_ENV
 
